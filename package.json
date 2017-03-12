@@ -10,8 +10,11 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "body-parser": "^1.17.1",
     "ejs": "2.4.1",
-    "express": "4.13.3"
+    "express": "4.13.3",
+    "sqlite": "^2.3.0",
+    "sqlite3": "^3.1.8"
   },
   "repository": {
     "type": "git",
