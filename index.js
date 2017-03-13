@@ -11,6 +11,27 @@ app.use(bodyParser.json());
 var sqlite3 = require('sqlite3').verbose()
 var db = new sqlite3.Database(':memory:')
 
+db.serialize(function() {
+  db.run("CREATE TABLE temp (date TEXT, value FLOAT)");
+
+
+// Fake measurements in the database for testing
+  var measurements = [12,38,24,57,67,70,71,72,74,50,32,18,20]
+  var dates = ["2017-03-13 13:33:17","2017-03-13 13:34:17","2017-03-13 13:35:17","2017-03-13 13:36:17",
+                "2017-03-13 13:37:17","2017-03-13 13:38:17","2017-03-13 13:39:17","2017-03-13 13:40:17",
+              "2017-03-13 13:41:17","2017-03-13 13:42:17","2017-03-13 13:44:17","2017-03-13 13:45:17",
+            "2017-03-13 13:46:17"]
+  for (var i = 0; i < measurements.length; i++) {
+    var query = 'INSERT INTO temp (date, value) VALUES (\''+dates[i]+'\', '+measurements[i]+');'
+    var stmt = db.prepare(query);
+    stmt.run()
+  }
+  stmt.finalize;
+  db.each("SELECT * FROM temp", function(err, row) {
+      console.log(row.date + ": " + row.value);
+  });
+});
+
 app.set('port', (process.env.PORT || 5000));
 
 app.use(express.static(__dirname + '/public'));
