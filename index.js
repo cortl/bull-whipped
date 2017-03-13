@@ -43,6 +43,15 @@ app.set('view engine', 'ejs');
 app.get('/', function(req, res) {
   res.render('pages/index');
 });
+
+app.get('/basement',function(req, res) {
+  res.render('pages/basement');
+});
+
+app.get('/livingroom',function(req, res) {
+  res.render('pages/basement');
+});
+
 app.get('/record', function(req, res){
   res.render('pages/record');
 });
@@ -52,7 +61,9 @@ app.post('/record', function(req, res) {
   var sensor = req.body.sensor;
   var measurement = req.body.data;
 
-  if (sensor == "" || measurement == ""){
+  console.log(sensor);
+  console.log(measurement);
+  if (sensor == "" || measurement == "" || typeof sensor == 'undefined' || typeof measurement == 'undefined'){
     // Nothing was sent, send 400 bad request
     res.writeHead(400, {'Content-Type': 'text/html'});
     res.end("<!doctype html><html><head><title>Bad Request</title></head><body>Bad Request.</body></html>")
