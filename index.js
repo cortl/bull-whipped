@@ -1,6 +1,9 @@
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
+var moment = require('moment');
+var Handlebars = require('handlebars');
+var Chart = require('chartjs')
 
 app.use(bodyParser.urlencoded({
   extended: false
@@ -41,7 +44,47 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {
-  res.render('pages/index');
+  var chartFrameHTML = '<div class="col-lg-4"><div class="panel panel-default"><div class="panel-heading"><h3 class="panel-title"><i class="fa fa-long-arrow-right fa-fw"></i>{{chart-title}}</h3></div><div class="panel-body"><canvas id="{{chart-title}}"></canvas>{{{chart-javascript}}}<div class="text-right"><a href="#">View Details <i class="fa fa-arrow-circle-right"></i></a></div></div></div></div>';
+  var chartHtml = '<script>\
+        var data = {\
+            labels: {{{chartLabels}}},\
+            datasets: [\
+                {\
+                    label: "Temperature (F)",\
+                    fillColor: "rgba(220,220,220,0.2)",\
+                    strokeColor: "rgba(220,220,220,1)",\
+                    pointColor: "rgba(220,220,220,1)",\
+                    pointStrokeColor: "#fff",\
+                    pointHighlightFill: "#fff",\
+                    pointHighlightStroke: "rgba(220,220,220,1)",\
+                    data: {{{chartEntries}}}\
+                }\
+            ]\
+        };\
+\
+        var ctx = document.getElementById("{{chart-title}}").getContext("2d");\
+        var lineGraph = new Chart(ctx, {\
+          type: \'line\',\
+          data})\
+    </script>'
+  var chartlabel = '["a","b"]'
+  var chartdata = '["50","100"]'
+  var chartHTMLData = {
+    "chartLabels":chartlabel,
+    "chartEntries":chartdata,
+    "chart-title":"birdjesus"
+  };
+  var chartHtmlTemplate = Handlebars.compile(chartHtml)
+  var chartFrameTemplate = Handlebars.compile(chartFrameHTML);
+
+  var chartFrameData = {
+    "chart-title": "birdjesus",
+    "chart-javascript":chartHtmlTemplate(chartHTMLData)
+  };
+  var result = chartFrameTemplate(chartFrameData);
+  console.log(result)
+  var chart = {charthtml : result};
+  res.render('pages/index', { locals: { data : chart } });
 });
 
 app.get('/basement',function(req, res) {
@@ -60,15 +103,12 @@ app.get('/record', function(req, res){
 app.post('/record', function(req, res) {
   var sensor = req.body.sensor;
   var measurement = req.body.data;
-
-  console.log(sensor);
-  console.log(measurement);
   if (sensor == "" || measurement == "" || typeof sensor == 'undefined' || typeof measurement == 'undefined'){
     // Nothing was sent, send 400 bad request
     res.writeHead(400, {'Content-Type': 'text/html'});
     res.end("<!doctype html><html><head><title>Bad Request</title></head><body>Bad Request.</body></html>")
   } else {
-    console.log("Recorded Data from Sensor: "+sensor)
+    console.log("Recorded Data from Sensor: "+sensor+", Measurement: "+measurement)
 
     // Check if table exists for that sensor
     db.all("SELECT count(*) AS tableCount FROM sqlite_master WHERE type='table' AND name='"+sensor+"';", function (err, row) {
@@ -91,12 +131,31 @@ app.post('/record', function(req, res) {
 
 app.get('/getData', function(req, res){
   var sensor = req.query.sensor
-  if (sensor != ""){
-    db.all('SELECT * FROM temp', function (err, row) {
-      res.writeHead(200, {'Content-Type': 'application/json'});
-      res.write(JSON.stringify(row));
-      res.end()
-    });
+  var last = req.query.last
+  if (sensor != "" && typeof sensor != 'undefined'){
+    if (last != "" && typeof last != 'undefined'){
+      // Person asking for the last x number of database entries
+      db.all('SELECT strftime(\'%Y-%m-%d %H:%M:%S\',datetime(date, \'localtime\')) AS date, value FROM '+sensor+' ORDER BY datetime(date) DESC Limit '+last+';', function (err, row) {
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        for (var i = 0; i < row.length; i++) {
+          var iterDate = moment(row[i].date);
+          row[i].date = iterDate.format('h:mm A')
+        }
+        res.write(JSON.stringify(row.reverse()));
+        res.end()
+      });
+    } else {
+      db.all('SELECT strftime(\'%Y-%m-%d %H:%M:%S\',datetime(date, \'localtime\')) AS date, value FROM temp', function (err, row) {
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        for (var i = 0; i < row.length; i++) {
+          // Pretty print dat date boi
+          var iterDate = moment(row[i].date);
+          row[i].date = iterDate.format('h:mm A')
+        }
+        res.write(JSON.stringify(row.reverse()));
+        res.end()
+      });
+    }
   } else {
     res.writeHead(404, {'Content-Type': 'text/html'});
     res.end("<!doctype html><html><head><title>Bad Sensor</title></head><body>No such sensor exists.</body></html>")

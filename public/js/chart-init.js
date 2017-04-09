@@ -1,39 +1,40 @@
 $(document).ready(function() {
-    $.ajax({
-      url: "/getData?sensor=temp",
-      method: "GET",
-      success: function(data) {
-        var date = [];
-        var temp = [];
+    var date = [];
+    var temp = [];
+    var initialized = false;
 
-        for (var i in data) {
-          date.push("Date " + data[i].date);
-          temp.push(data[i].value);
-        }
-        var tempChartData = {
-          labels: date,
-          datasets: [
-            {
-              label: "Temperature (F)",
-              data : temp,
+    setInterval(function() {
+        $.ajax({
+            url: "/getData?sensor=temp&last=5",
+            method: "GET",
+            success: function(data) {
+                    console.log(data)
+                    for (var i in data) {
+                      // if the received dates aren't already in the chart, go ahead and put it in there
+                        if ($.inArray(data[i].date,date) == -1){
+                          date.push(data[i].date);
+                          temp.push(data[i].value);
+                      }
+                    }
+                    lineGraph.update()
+            },
+            error: function(data) {
+                console.log(data)
             }
-          ]};
-        var ctx = document.getElementById('temperature-chart').getContext('2d');
-        var lineGraph = new Chart(ctx, {
-          type: 'line',
-          data: tempChartData
         });
-      },
-      error: function(data) {
-        console.log(data)
-      }
+    }, 1000);
+
+    var tempChartData = {
+        labels: date,
+        datasets: [{
+            label: "Temperature (F)",
+            data: temp,
+        }]
+    };
+
+    var ctx = document.getElementById('temperature-chart').getContext('2d');
+    var lineGraph = new Chart(ctx, {
+        type: 'line',
+        data: tempChartData
     });
-
-    function updateTemp() {
-      $
-    }
-
-    window.setInterval(function(){
-
-    }, 5000);
 })
