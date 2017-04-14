@@ -25,7 +25,7 @@ app.set('view engine', 'ejs');
 //
 // Create initial database tables
 //
-var dbinit = require("./db.js")(db);
+var dbinit = require("./db.js")(db, app);
 
 //
 // Map routes

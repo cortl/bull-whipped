@@ -34,6 +34,7 @@ function updateRoutes(db, app) {
       var route = "/"+sensor
       // map the route
       app.get(route, function (req, res){
+        // db.all("SELECT * FROM avail_sensors WHERE ")
         // need to use a navbar with the current link on "active"
         // find our sensor and make it's nav link to be active
         for (var x = 0; x < global.navbar.length; x++){

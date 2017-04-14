@@ -151,17 +151,13 @@ var navHTML = '\
               {{else}}\
               <li><a href="/"><i class="fa fa-dashboard"></i> Dashboard</a></li>\
               {{/if}}\
-            <li>\
-                <a href="javascript:;" data-toggle="collapse" data-target="#modules"><i class="fa fa-fw fa-arrows-v"></i> Modules <i class="fa fa-fw fa-caret-down"></i></a>\
-                <ul id="modules" class="collapse">\
-                    {{#each modules}}\
-                      {{#if this.active}}\
-                      <li class="active"><a href="/{{this.sensor}}"><i class="{{this.icon}}" aria-hidden="true"></i> {{this.title}}</a></li>\
-                      {{else}}\
-                      <li class="active"><a href="/{{this.sensor}}"><i class="{{this.icon}}" aria-hidden="true"></i> {{this.title}}</a></li>\
-                      {{/if}}\
-                    {{/each}}\
-                </ul>\
+              {{#each modules}}\
+                {{#if this.active}}\
+                  <li class="active"><a href="/{{this.sensor}}"><i class="{{this.icon}}" aria-hidden="true"></i> {{this.title}}</a></li>\
+                {{else}}\
+                  <li><a href="/{{this.sensor}}"><i class="{{this.icon}}" aria-hidden="true"></i> {{this.title}}</a></li>\
+                {{/if}}\
+              {{/each}}\
         </ul>\
     </div>\
     <!-- /.navbar-collapse -->\
