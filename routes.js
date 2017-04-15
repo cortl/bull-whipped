@@ -1,28 +1,62 @@
 var moment = require('moment');
-var helper = require("./helper");
 var htmlpartials = require("./html-templates");
 
 module.exports = function(db, app) {
-    app.get('/', function(req, res) {
-        helper.updateRoutes(db, app);
+    function updateNavigationData() {
         db.all("SELECT * FROM avail_sensors", function(err, rows) {
-            var result = "<div class=\"row\">"
+            var modulesArray = [];
             for (var i = 0; i < rows.length; i++) {
                 var sensor = rows[i].sensorname;
-                var label = rows[i].measurement;
+                var icon = rows[i].pageicon;
                 var title = rows[i].title;
-                result = result + htmlpartials.buildChart(sensor, label, title, 4, 5, NaN, true);
+                var ientry = {
+                    "icon": icon,
+                    "sensor": sensor,
+                    "title": title,
+                    "active": false
+                }
+                modulesArray.push(ientry);
             }
-            var finishedChartHTML = result + "</div>";
+            // set datastructure as global
+            global.navbar = modulesArray;
+        });
+    }
+
+    // Create a route for every sensor (giving them their own pages)
+    app.get('/modules/*', function(req, res) {
+        updateNavigationData();
+        var url = req.url.split("/"); // we want the last item in this array, name of the module
+        var query = "SELECT * FROM avail_sensors WHERE sensorname=\'"+url[2]+"\'";
+        db.all(query, function(err, rows) {
+            if(typeof rows == undefined){
+              res.status(404)
+              res.send("Module Not Found")
+            }
+            var title = rows[0].title;
+            var pageicon = rows[0].pageicon;
+            var sensor = rows[0].sensorname;
+            var label = rows[0].measurement;
+            var htmlData = htmlpartials.buildMeasurementPage(sensor, title, pageicon, label)
             res.render('pages/index', {
-                body: finishedChartHTML,
+                body: htmlData["body"],
+                title: title,
+                subtitle: "",
+                breadcrumbs: htmlData["breadcrumbs"],
+                navhtml: htmlData["nav"]
+            });
+        });
+    });
+    app.get('/', function(req, res) {
+        updateNavigationData();
+        db.all("SELECT * FROM avail_sensors", function(err, rows) {
+            var title = "Smart Home Dashboard";
+            var htmlData = htmlpartials.buildDashboard(title, rows)
+            res.render('pages/index', {
+                body: htmlData["body"],
                 title: "Smart Home Dashboard",
                 subtitle: "",
                 breadcrumbs: "",
-                navhtml: htmlpartials.navigationTemplate({
-                    modules: global.navbar,
-                    dashboard: true
-                })
+                navhtml: htmlData["nav"]
             });
         });
     });
@@ -67,7 +101,7 @@ module.exports = function(db, app) {
                             'Content-Type': 'text/html'
                         });
                         res.end("<!doctype html><html><head><title>Received</title></head><body>Data Received.</body></html>")
-                        helper.updateRoutes(db, app)
+                        updateRoutes()
                     }
                 } else {
                     // sensor has been registered, add the measurement in.
@@ -87,7 +121,6 @@ module.exports = function(db, app) {
             });
         }
     });
-
     app.get('/getData', function(req, res) {
         var sensor = req.query.sensor
         var last = req.query.last
@@ -125,7 +158,6 @@ module.exports = function(db, app) {
             res.end("<!doctype html><html><head><title>Bad Sensor</title></head><body>No such sensor exists.</body></html>")
         }
     });
-
     app.listen(app.get('port'), function() {
         console.log('Node app is running on port', app.get('port'));
     });
