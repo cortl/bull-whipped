@@ -24,7 +24,7 @@ var navHTML = '\
               {{/if}}\
               {{#each modules}}\
                 {{#if this.active}}\
-                  <li class="active"><a href="/{{this.sensor}}"><i class="{{this.icon}}" aria-hidden="true"></i> {{this.title}}</a></li>\
+                  <li class="active"><a href="/modules/{{this.sensor}}"><i class="{{this.icon}}" aria-hidden="true"></i> {{this.title}}</a></li>\
                 {{else}}\
                   <li><a href="/modules/{{this.sensor}}"><i class="{{this.icon}}" aria-hidden="true"></i> {{this.title}}</a></li>\
                 {{/if}}\

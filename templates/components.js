@@ -26,7 +26,22 @@ var componentOverviewHTML = '\
     </div>\
 </div>'
 
+var odometerHoldHTML = '\
+  <div class="col-lg-{{size}} col-md-6">\
+    <h3>{{title}}</h3>\
+    <h1 id={{variable}} class="odometer"></h1>\
+  </div>\
+'
+
+var odometerHoldJS = '\
+setTimeout(function(){\
+  jQuery("#{{id}}").text({{{value}}});\
+  console.log("{{{value}}}")\
+}, 1000);\
+'
 module.exports = {
   componentOverviewHTML: componentOverviewHTML,
-  rowHTML: rowHTML
+  rowHTML: rowHTML,
+  odometerHoldHTML : odometerHoldHTML,
+  odometerHoldJS : odometerHoldJS
 }
